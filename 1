@@ -1,0 +1,85 @@
+plugins {
+    id("com.android.application") version "8.7.3" apply false
+    id("org.jetbrains.kotlin.android") version "2.0.21" apply false
+}
+org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
+android.useAndroidX=truename: Build Trubasik APK
+
+on:
+  workflow_dispatch:plugins {
+    id("com.android.application")
+    id("org.jetbrains.kotlin.android")
+}
+android {
+    namespace = "ru.trubasik.livewallpaper"
+    compileSdk = 35
+    defaultConfig {
+        applicationId = "ru.trubasik.livewallpaper"
+        minSdk = 23
+        targetSdk = 35
+        versionCode = 1
+        versionName = "1.0"
+    }
+}
+
+  push:
+    branches: [ "main", "master" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.9"
+      - name: Build debug APK
+        run: gradle assembleDebug
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Trubasik-debug-APK
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
+
+kotlin.code.style=official
+# Трубасик — живые обои Android
+pluginManagement { repositories { google(); mavenCentral(); gradlePluginPortal() } }
+dependencyResolutionManagement { repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS); repositories { google(); mavenCentral() } }
+rootProject.name = "TrubasikLiveWallpaper"
+include(":app")
+
+Этот репозиторий содержит проект Android Studio и GitHub Actions workflow, который автоматически собирает APK.
+
+## Как получить APK через GitHub без Android Studio
+
+1. На GitHub создай новый репозиторий, например `trubasik-live-wallpaper`.
+2. Распакуй этот ZIP и загрузи **все файлы и папки изнутри** в корень репозитория. В том числе папку `.github/workflows` (она может быть скрыта на компьютере; проверь, что `build-apk.yml` загружен).
+3. Открой вкладку **Actions** в репозитории. Если GitHub попросит включить Actions, подтверди.
+4. Выбери workflow **Build Trubasik APK** и нажми **Run workflow**. Сборка также запускается при загрузке изменений в ветку `main` или `master`.
+5. Дождись зелёной галочки. Открой завершённый запуск, пролистай вниз до **Artifacts** и скачай `Trubasik-debug-APK`.
+6. Распакуй скачанный артефакт ZIP: внутри будет `app-debug.apk`.
+7. Передай APK на Android-телефон, открой файл и разреши установку из этого источника, если Android попросит.
+8. Открой настройки телефона → **Обои** → **Живые обои**, выбери **«Трубасик — живые обои»** и установи.
+
+## Что делает первая версия
+
+Трубасик автоматически двигается по трубам, бежит к условным протечкам, машет молотком, радуется ремонту и отдыхает. Значки остаются нажимаемыми, потому что персонаж рисуется в живых обоях.
+
+## Честно об ограничениях
+
+- Это **живые обои**, а не плавающий персонаж поверх других приложений.
+- В первой версии персонаж нарисован программно и не является точной копией 3D-персонажа с картинки.
+- GitHub Actions должен успешно завершить сборку прежде, чем появится APK в Artifacts. Если сборка завершится ошибкой, открой журнал шага **Build debug APK**: там будет текст ошибки.
+- APK, собранный таким способом, — debug APK для личного тестирования, не подписанный релиз для публикации в Google Play.
